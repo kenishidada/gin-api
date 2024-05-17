@@ -10,12 +10,12 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-func main() {
-	infra.Initialize()
-	db := infra.SetupDB()
-
+func setupRouter(db *gorm.DB) *gin.Engine {
+	r := gin.Default()
+	r.Use(cors.Default())
 	itemRepository := repositories.NewItemRepository(db)
 	itemService := services.NewItemService(itemRepository)
 	itemController := controllers.NewItemController(itemService)
@@ -24,9 +24,6 @@ func main() {
 	authService := services.NewAuthService(authRepository)
 	authController := controllers.NewAuthController(authService)
 
-	r := gin.Default()
-	// CORS 対応
-	r.Use(cors.Default())
 	itemRouter := r.Group("/items")
 	itemRouterWithAuth := r.Group("/items", middlewares.AuthMiddleware(authService))
 	authRouter := r.Group("/auth")
@@ -38,5 +35,14 @@ func main() {
 
 	authRouter.POST("/resister", authController.SignUp)
 	authRouter.POST("/login", authController.Login)
-	r.Run() // 0.0.0.0:8080 でサーバーを立てます。
+
+	return r
+}
+
+func main() {
+	infra.Initialize()
+	db := infra.SetupDB()
+	r := setupRouter(db)
+
+	r.Run()
 }
