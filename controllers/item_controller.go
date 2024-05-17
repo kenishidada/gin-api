@@ -13,6 +13,7 @@ type IItemController interface {
 	FindAll(ctx *gin.Context)
 	FindById(ctx *gin.Context)
 	Create(ctx *gin.Context)
+	Update(ctx *gin.Context)
 }
 
 type ItemController struct {
@@ -61,4 +62,28 @@ func (c *ItemController) Create(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusCreated, newItem)
+}
+
+func (c *ItemController) Update(ctx *gin.Context) {
+	itemId, err := strconv.ParseUint(ctx.Param("id"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var itemInput dto.UpdateItemInput
+	if err := ctx.ShouldBindJSON(&itemInput); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	updatedItem, err := c.service.Update(uint(itemId), itemInput)
+	if err != nil {
+		if err.Error() == "item not found" {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+	ctx.JSON(http.StatusOK, updatedItem)
 }
