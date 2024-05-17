@@ -1,8 +1,9 @@
 package repositories
 
 import (
-	"errors"
 	"gin-api/models"
+
+	"gorm.io/gorm"
 )
 
 type IItemRepository interface {
@@ -13,49 +14,57 @@ type IItemRepository interface {
 	Delete(itemId uint) error
 }
 
-type ItemMemoryRepository struct {
-	items []models.Item
+type ItemRepository struct {
+	db *gorm.DB
 }
 
-func NewItemMemoryRepository(items []models.Item) IItemRepository {
-	return &ItemMemoryRepository{items: items}
-}
-
-func (r *ItemMemoryRepository) FindAll() (*[]models.Item, error) {
-	return &r.items, nil
-}
-
-func (r *ItemMemoryRepository) FindById(itemId uint) (*models.Item, error) {
-	for _, item := range r.items {
-		if item.ID == itemId {
-			return &item, nil
-		}
+// Create implements IItemRepository.
+func (r *ItemRepository) Create(newItem models.Item) (*models.Item, error) {
+	result := r.db.Create(&newItem)
+	if result.Error != nil {
+		return nil, result.Error
 	}
-	return nil, errors.New("item not found")
-}
-
-func (r *ItemMemoryRepository) Create(newItem models.Item) (*models.Item, error) {
-	newItem.ID = uint(len(r.items) + 1)
-	r.items = append(r.items, newItem)
 	return &newItem, nil
 }
 
-func (r *ItemMemoryRepository) Update(updatedItem models.Item) (*models.Item, error) {
-	for i, item := range r.items {
-		if item.ID == updatedItem.ID {
-			r.items[i] = updatedItem
-			return &r.items[i], nil
-		}
+// Delete implements IItemRepository.
+func (r *ItemRepository) Delete(itemId uint) error {
+	result := r.db.Delete(&models.Item{}, itemId)
+	if result.Error != nil {
+		return result.Error
 	}
-	return nil, errors.New("item not found")
+	return nil
 }
 
-func (r *ItemMemoryRepository) Delete(itemId uint) error {
-	for i, item := range r.items {
-		if item.ID == itemId {
-			r.items = append(r.items[:i], r.items[i+1:]...)
-			return nil
-		}
+// FindAll implements IItemRepository.
+func (r *ItemRepository) FindAll() (*[]models.Item, error) {
+	var items []models.Item
+	result := r.db.Find(&items)
+	if result.Error != nil {
+		return nil, result.Error
 	}
-	return errors.New("item not found")
+	return &items, nil
+}
+
+// FindById implements IItemRepository.
+func (r *ItemRepository) FindById(itemId uint) (*models.Item, error) {
+	var item models.Item
+	result := r.db.First(&item, itemId)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &item, nil
+}
+
+// Update implements IItemRepository.
+func (r *ItemRepository) Update(updatedItem models.Item) (*models.Item, error) {
+	result := r.db.Save(&updatedItem)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &updatedItem, nil
+}
+
+func NewItemRepository(db *gorm.DB) IItemRepository {
+	return &ItemRepository{db: db}
 }
