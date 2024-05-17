@@ -26,5 +26,6 @@ func main() {
 	r.GET("/items/:id", itemController.FindById)
 	r.POST("items", itemController.Create)
 	r.PUT("items/:id", itemController.Update)
+	r.DELETE("items/:id", itemController.Delete)
 	r.Run() // 0.0.0.0:8080 でサーバーを立てます。
 }
