@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"gin-api/dto"
 	"gin-api/services"
 	"net/http"
 	"strconv"
@@ -11,6 +12,7 @@ import (
 type IItemController interface {
 	FindAll(ctx *gin.Context)
 	FindById(ctx *gin.Context)
+	Create(ctx *gin.Context)
 }
 
 type ItemController struct {
@@ -45,4 +47,18 @@ func (c *ItemController) FindById(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 	ctx.JSON(http.StatusOK, item)
+}
+
+func (c *ItemController) Create(ctx *gin.Context) {
+	var itemInput dto.CreateItemInput
+	if err := ctx.ShouldBindJSON(&itemInput); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	newItem, err := c.service.Create(itemInput)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusCreated, newItem)
 }
