@@ -8,10 +8,10 @@ import (
 
 type IItemRepository interface {
 	FindAll() (*[]models.Item, error)
-	FindById(itemId uint) (*models.Item, error)
+	FindById(itemId uint, userId uint) (*models.Item, error)
 	Create(newItem models.Item) (*models.Item, error)
 	Update(updatedItem models.Item) (*models.Item, error)
-	Delete(itemId uint) error
+	Delete(itemId uint, userId uint) error
 }
 
 type ItemRepository struct {
@@ -28,8 +28,13 @@ func (r *ItemRepository) Create(newItem models.Item) (*models.Item, error) {
 }
 
 // Delete implements IItemRepository.
-func (r *ItemRepository) Delete(itemId uint) error {
-	result := r.db.Delete(&models.Item{}, itemId)
+func (r *ItemRepository) Delete(itemId uint, userId uint) error {
+	deleteItem, err := r.FindById(itemId, userId)
+	if err != nil {
+		return err
+	}
+
+	result := r.db.Delete(&deleteItem)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -47,9 +52,9 @@ func (r *ItemRepository) FindAll() (*[]models.Item, error) {
 }
 
 // FindById implements IItemRepository.
-func (r *ItemRepository) FindById(itemId uint) (*models.Item, error) {
+func (r *ItemRepository) FindById(itemId uint, userId uint) (*models.Item, error) {
 	var item models.Item
-	result := r.db.First(&item, itemId)
+	result := r.db.First(&item, "id = ? AND user_id = ?", itemId, userId)
 	if result.Error != nil {
 		return nil, result.Error
 	}
