@@ -32,7 +32,7 @@ func (c *ItemController) FindAll(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusOK, items)
+	ctx.JSON(http.StatusOK, gin.H{"data": items})
 }
 
 func (c *ItemController) FindById(ctx *gin.Context) {
@@ -77,7 +77,7 @@ func (c *ItemController) Create(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusCreated, newItem)
+	ctx.JSON(http.StatusCreated, gin.H{"data": newItem})
 }
 
 func (c *ItemController) Update(ctx *gin.Context) {
