@@ -23,13 +23,13 @@ golang(gin)のAPI作成方法を一通り学習すること。
 
 ## サーバー起動
 
-DBを起動
+* DBを起動
 
 ```shell
 docker-compose up -d
 ```
 
-サーバー起動
+* サーバー起動
 
 ```shell
 air
@@ -116,7 +116,7 @@ curl -X DELETE http://localhost:8080/items/1
 
 ## テスト実行
 
-以下コマンドを実行
+* 以下コマンドを実行
 
 ```shell
 go test ./...
